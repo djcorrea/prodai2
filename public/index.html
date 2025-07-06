@@ -1,56 +1,34 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prod.AI - Mentor Virtual</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div class="particles"></div>
-  
-  <div class="container fade-in">
-    <header class="header">
-      <h1 class="logo">Prod.AI</h1>
-      <p class="subtitle">Seu mentor virtual inteligente</p>
-    </header>
-    
-    <div class="chat-container">
-      <div class="chatbox" id="chatbox">
-        <div class="message bot">
-          <div class="message-content">
-            <strong>Assistente:</strong> Olá! Sou seu mentor virtual. Como posso te ajudar hoje?
-          </div>
-        </div>
-      </div>
-      
-      <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dots">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        <span class="typing-text">Assistente está digitando...</span>
-      </div>
-      
-      <div class="input-container">
-        <input type="text" id="user-input" placeholder="Digite sua mensagem..." autocomplete="off" />
-        <button onclick="sendMessage()" id="sendBtn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m22 2-7 20-4-9-9-4Z"/>
-            <path d="M22 2 11 13"/>
-          </svg>
-          Enviar
-        </button>
-      </div>
-    </div>
-    
-    <footer class="footer">
-      <p>Siga no Instagram: <a href="https://instagram.com/djcorreaoriginal" target="_blank">@djcorreaoriginal</a></p>
-    </footer>
-  </div>
-  
-  <script src="script.js"></script>
-</body>
-</html>
+const chatbox = document.getElementById('chatbox');
+const input = document.getElementById('user-input');
+const sendBtn = document.getElementById('sendBtn');
+const typingIndicator = document.getElementById('typingIndicator');
+
+let conversationHistory = [];
+
+async function sendMessage() {
+  const message = input.value.trim();
+  if (!message) return;
+
+  addMessage('user', message);
+  input.value = '';
+  typingIndicator.style.display = 'flex';
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        conversationHistory
+      })
+    });
+
+    const data = await res.json();
+    typingIndicator.style.display = 'none';
+
+    if (data.reply) {
+      addMessage('bot', data.reply);
+      conversationHistory = data.conversationHistory || [];
+    } else {
+      addMessage('bot', '❌ Erro: resposta vazia ou mal formatada.');
+      console.error(d
