@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DO BEAT AO HIT - Mentor Virtual</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap" rel="stylesheet">
+  <style>
+    h1 {
+      font-family: 'Raleway', sans-serif;
+      font-size: 42px;
+      color: #9b6cfb;
+      text-align: center;
+      margin-bottom: 5px;
+      text-shadow: 0 0 15px rgba(155, 108, 251, 0.8), 0 0 30px rgba(155, 108, 251, 0.4);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 10px rgba(155, 108, 251, 0.6);
+      }
+      to {
+        text-shadow: 0 0 25px rgba(155, 108, 251, 1);
+      }
+    }
+    .fade-in {
+      animation: fadeIn 0.6s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="container fade-in">
+    <h1>Prod.AI</h1>
+    <p class="subtitle">Seu mentor virtual</p>
+    <div class="chatbox" id="chatbox"></div>
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Tire sua dúvida..." autocomplete="off" />
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+    <footer style="text-align: center; margin-top: 15px; color: #888; font-size: 14px;">
+      Siga no Instagram: <a href="instagram.com/djcorreaoriginal/" target="_blank" style="color: #9b6cfb; text-decoration: none;">@djcorreaoriginal</a>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
