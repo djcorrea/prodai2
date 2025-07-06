@@ -1,75 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prod.AI - Seu Mentor Virtual</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DO BEAT AO HIT - Mentor Virtual</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap" rel="stylesheet">
+  <style>
+    h1 {
+      font-family: 'Raleway', sans-serif;
+      font-size: 42px;
+      color: #9b6cfb;
+      text-align: center;
+      margin-bottom: 5px;
+      text-shadow: 0 0 15px rgba(155, 108, 251, 0.8), 0 0 30px rgba(155, 108, 251, 0.4);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 10px rgba(155, 108, 251, 0.6);
+      }
+      to {
+        text-shadow: 0 0 25px rgba(155, 108, 251, 1);
+      }
+    }
+    .fade-in {
+      animation: fadeIn 0.6s ease-in-out;
+    }
+  </style>
 </head>
 <body>
-    <div class="particles"></div>
-    
-    <div class="container">
-        <header class="header">
-            <h1 class="logo">Prod.AI</h1>
-            <p class="subtitle">Seu mentor virtual inteligente</p>
-        </header>
-        
-        <div class="chat-container">
-            <div class="chat-messages" id="chatMessages">
-                <div class="message assistant">
-                    <div>
-                        <div class="message-label">Assistente:</div>
-                        <div class="message-bubble">Olá! Como posso ajudar hoje?</div>
-                    </div>
-                </div>
-                
-                <div class="message user">
-                    <div>
-                        <div class="message-label">Você:</div>
-                        <div class="message-bubble">opa</div>
-                    </div>
-                </div>
-                
-                <div class="message assistant">
-                    <div>
-                        <div class="message-label">Assistente:</div>
-                        <div class="message-bubble">Olá! Como posso ajudar hoje?</div>
-                    </div>
-                </div>
-                
-                <div class="message user">
-                    <div>
-                        <div class="message-label">Você:</div>
-                        <div class="message-bubble">quem e vc</div>
-                    </div>
-                </div>
-                
-                <div class="message assistant">
-                    <div>
-                        <div class="message-label">Assistente:</div>
-                        <div class="message-bubble">Olá! Eu sou um assistente virtual projetado para interagir, conversar e ajudar com diversas questões que você possa ter. Como posso ajudar você hoje?</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="typing-indicator" id="typingIndicator">
-                <span>Assistente está digitando</span><span class="typing-dots">...</span>
-            </div>
-            
-            <div class="input-section">
-                <div class="input-container">
-                    <input type="text" class="chat-input" placeholder="Digite sua mensagem..." id="messageInput">
-                </div>
-                <button class="send-btn" onclick="sendMessage()">Enviar</button>
-            </div>
-        </div>
-        
-        <footer class="footer">
-            <p>Siga no Instagram: <a href="https://instagram.com/djcorreaoriginal" target="_blank">@djcorreaoriginal</a></p>
-        </footer>
+  <div class="container fade-in">
+    <h1>Prod.AI</h1>
+    <p class="subtitle">Seu mentor virtual</p>
+    <div class="chatbox" id="chatbox"></div>
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Tire sua dúvida..." autocomplete="off" />
+      <button onclick="sendMessage()">Enviar</button>
     </div>
-
-    <script src="script.js"></script>
+    <footer style="text-align: center; margin-top: 15px; color: #888; font-size: 14px;">
+      Siga no Instagram: <a href="instagram.com/djcorreaoriginal/" target="_blank" style="color: #9b6cfb; text-decoration: none;">@djcorreaoriginal</a>
+    </footer>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
