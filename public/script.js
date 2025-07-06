@@ -5,19 +5,19 @@ const typingIndicator = document.getElementById('typingIndicator');
 
 let conversationHistory = [
   {
-    role: "system",
-    content: "Você é um mentor virtual especializado em produção musical, especialmente em funk, trap, phonk e estilos brasileiros. Responda com dicas práticas, técnicas, sugestões de plugins, estruturação musical, marketing e carreira musical. Seja direto, útil e sempre relacionado à produção musical."
+    role: 'system',
+    content: 'Você é um assistente de produção musical brasileiro. Fale como um mentor que entende muito de funk, beat, mixagem, sintetizadores e carreira. Responda com técnica e clareza como se estivesse ensinando.'
   }
 ];
 
 function appendMessage(content, className) {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${className}`;
-  
+
   const messageContent = document.createElement('div');
   messageContent.className = 'message-content';
   messageContent.innerHTML = content.replace(/\n/g, '<br>');
-  
+
   messageDiv.appendChild(messageContent);
   chatbox.appendChild(messageDiv);
   chatbox.scrollTop = chatbox.scrollHeight;
@@ -40,11 +40,11 @@ async function sendMessage() {
   input.value = '';
   input.focus();
 
+  conversationHistory.push({ role: 'user', content: message });
+
   sendBtn.disabled = true;
   sendBtn.innerHTML = 'Enviando...';
   showTypingIndicator();
-
-  conversationHistory.push({ role: 'user', content: message });
 
   try {
     const res = await fetch('/api/chat', {
@@ -60,19 +60,17 @@ async function sendMessage() {
       appendMessage(`<strong>Assistente:</strong> ${data.reply}`, 'bot');
       conversationHistory.push({ role: 'assistant', content: data.reply });
     } else {
-      appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia ou mal formatada.`, 'bot');
-      console.error(data);
+      appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia.`, 'bot');
     }
   } catch (err) {
     hideTypingIndicator();
     appendMessage(`<strong>Assistente:</strong> Erro ao se conectar com o servidor.`, 'bot');
-    console.error('Erro:', err);
+    console.error(err);
   } finally {
     sendBtn.disabled = false;
     sendBtn.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="m22 2-7 20-4-9-9-4Z"/>
-        <path d="M22 2 11 13"/>
+        <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
       </svg>Enviar`;
   }
 }
@@ -87,6 +85,6 @@ input.addEventListener('keydown', function (e) {
 window.addEventListener('load', () => {
   input.focus();
   setTimeout(() => {
-    appendMessage('<strong>Assistente:</strong> 🎵 Bem-vindo! Sou seu mentor especializado em produção musical. Posso te ajudar com beats, mixagem, carreira musical e muito mais. O que você gostaria de aprender hoje?', 'bot');
+    appendMessage('<strong>Assistente:</strong> 🎵 Bem-vindo! Sou seu mentor especializado em produção musical. O que você gostaria de aprender hoje?', 'bot');
   }, 1000);
 });
