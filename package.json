@@ -1,0 +1,27 @@
+{
+  "name": "chatbot-correa",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.0.1",
+    "express": "^4.21.2",
+    "node-fetch": "^2.6.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djcorrea/Prod.ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/djcorrea/Prod.ai/issues"
+  },
+  "homepage": "https://github.com/djcorrea/Prod.ai#readme",
+  "description": ""
+}
