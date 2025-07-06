@@ -33,7 +33,7 @@ const keywordResponses = {
 
 function appendMessage(content, className) {
   const messageDiv = document.createElement('div');
-  messageDiv.className = message ${className};
+  messageDiv.className = `message ${className}`;
   
   const messageContent = document.createElement('div');
   messageContent.className = 'message-content';
@@ -56,14 +56,12 @@ function hideTypingIndicator() {
 function getSmartResponse(message) {
   const lowerMessage = message.toLowerCase();
   
-  // Procura por palavras-chave
   for (const keyword in keywordResponses) {
     if (lowerMessage.includes(keyword)) {
       return keywordResponses[keyword];
     }
   }
   
-  // Resposta aleatória se não encontrar palavra-chave
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
@@ -71,35 +69,28 @@ async function sendMessage() {
   const message = input.value.trim();
   if (!message || sendBtn.disabled) return;
 
-  // Desabilita o botão temporariamente
   sendBtn.disabled = true;
   sendBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>Enviando...';
 
-  appendMessage(<strong>Você:</strong> ${message}, 'user');
+  appendMessage(`<strong>Você:</strong> ${message}`, 'user');
   input.value = '';
-
-  // Mostra indicador de digitação
   showTypingIndicator();
 
-  // Simula tempo de resposta realista
-  const responseTime = Math.random() * 2000 + 1000; // 1-3 segundos
+  const responseTime = Math.random() * 2000 + 1000;
   
   setTimeout(() => {
     hideTypingIndicator();
     
     const response = getSmartResponse(message);
-    appendMessage(<strong>Assistente:</strong> ${response}, 'bot');
+    appendMessage(`<strong>Assistente:</strong> ${response}`, 'bot');
     
-    // Reabilita o botão
     sendBtn.disabled = false;
     sendBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Enviar';
     
-    // Foca no input novamente
     input.focus();
   }, responseTime);
 }
 
-// Event listeners
 input.addEventListener('keydown', function (e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -107,12 +98,10 @@ input.addEventListener('keydown', function (e) {
   }
 });
 
-// Foca no input quando a página carrega
 window.addEventListener('load', () => {
   input.focus();
 });
 
-// Adiciona uma mensagem de boas-vindas após um tempo
 setTimeout(() => {
   if (chatbox.children.length === 1) {
     appendMessage('<strong>Assistente:</strong> 🎵 Bem-vindo! Sou seu mentor especializado em produção musical. Posso te ajudar com beats, mixagem, carreira musical e muito mais. O que você gostaria de aprender hoje?', 'bot');
