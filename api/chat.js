@@ -1,5 +1,4 @@
 // api/chat.js (função serverless para Vercel)
-import fetch from 'node-fetch';
 
 // PROMPT OTIMIZADO DO PROD.AI 🎵
 const PRODAI_SYSTEM_PROMPT = `
@@ -102,11 +101,11 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o',
         temperature: 0.7,
         max_tokens: 1000,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1,
+        presence_penalty: 0.4,
+        frequency_penalty: 0.4,
         messages: messages
       })
     });
