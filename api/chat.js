@@ -1,3 +1,5 @@
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 // api/chat.js (função serverless para Vercel)
 
 // PROMPT OTIMIZADO DO PROD.AI 🎵
