@@ -3,45 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DO BEAT AO HIT - Mentor Virtual</title>
+  <title>Prod.AI - Mentor Virtual</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@700&display=swap" rel="stylesheet">
-  <style>
-    h1 {
-      font-family: 'Raleway', sans-serif;
-      font-size: 42px;
-      color: #9b6cfb;
-      text-align: center;
-      margin-bottom: 5px;
-      text-shadow: 0 0 15px rgba(155, 108, 251, 0.8), 0 0 30px rgba(155, 108, 251, 0.4);
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-    @keyframes glow {
-      from {
-        text-shadow: 0 0 10px rgba(155, 108, 251, 0.6);
-      }
-      to {
-        text-shadow: 0 0 25px rgba(155, 108, 251, 1);
-      }
-    }
-    .fade-in {
-      animation: fadeIn 0.6s ease-in-out;
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <div class="particles"></div>
+  
   <div class="container fade-in">
-    <h1>Prod.AI</h1>
-    <p class="subtitle">Seu mentor virtual</p>
-    <div class="chatbox" id="chatbox"></div>
-    <div class="input-container">
-      <input type="text" id="user-input" placeholder="Tire sua dúvida..." autocomplete="off" />
-      <button onclick="sendMessage()">Enviar</button>
+    <header class="header">
+      <h1 class="logo">Prod.AI</h1>
+      <p class="subtitle">Seu mentor virtual inteligente</p>
+    </header>
+    
+    <div class="chat-container">
+      <div class="chatbox" id="chatbox">
+        <div class="message bot">
+          <div class="message-content">
+            <strong>Assistente:</strong> Olá! Sou seu mentor virtual. Como posso te ajudar hoje?
+          </div>
+        </div>
+      </div>
+      
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <span class="typing-text">Assistente está digitando...</span>
+      </div>
+      
+      <div class="input-container">
+        <input type="text" id="user-input" placeholder="Digite sua mensagem..." autocomplete="off" />
+        <button onclick="sendMessage()" id="sendBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m22 2-7 20-4-9-9-4Z"/>
+            <path d="M22 2 11 13"/>
+          </svg>
+          Enviar
+        </button>
+      </div>
     </div>
-    <footer style="text-align: center; margin-top: 15px; color: #888; font-size: 14px;">
-      Siga no Instagram: <a href="instagram.com/djcorreaoriginal/" target="_blank" style="color: #9b6cfb; text-decoration: none;">@djcorreaoriginal</a>
+    
+    <footer class="footer">
+      <p>Siga no Instagram: <a href="https://instagram.com/djcorreaoriginal" target="_blank">@djcorreaoriginal</a></p>
     </footer>
   </div>
+  
   <script src="script.js"></script>
 </body>
 </html>
