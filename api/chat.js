@@ -1,54 +1,47 @@
-// /api/chat.js
-console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY);
-
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Use POST 🎵' });
   }
 
   const { message, conversationHistory = [] } = req.body;
 
-  // LOG de debug da mensagem
-  console.log('Mensagem recebida:', message);
-  console.log('Chave recebida:', process.env.OPENAI_API_KEY);
-
-  if (!message || typeof message !== 'string' || message.trim() === '') {
-    return res.status(400).json({ message: 'Mensagem inválida 🎶' });
-  }
-
-  if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({
-      message: 'API KEY não encontrada no servidor 😔'
-    });
+  if (!message || !process.env.OPENAI_API_KEY) {
+    return res.status(400).json({ message: 'Mensagem inválida ou chave ausente' });
   }
 
   const messages = [
     {
       role: 'system',
       content: `
-Você é o Prod.AI 🎵, mentor de produção musical brasileira, focado em funk.
+Você é o Prod.AI 🎵 – um mentor especialista em produção musical brasileira, com foco em funk.
 
-Seja direto, use emojis 🎶, explique de forma prática, ajude com mixagem, beat, voz e carreira.
+✅ Regras:
+- Só fale sobre música e produção musical
+- Use emojis 🎶
+- Seja prático, direto, explicativo e técnico quando necessário
+- Se for assunto fora da música, diga: "Opa! 🎵 Só respondo dúvidas sobre produção musical. Manda uma pergunta sobre beat, voz ou mix!"
 
-Se o assunto for fora da música, diga: "Opa! 🎵 Só respondo dúvidas sobre produção musical. Manda aí um beat ou pergunta de mix!".
+🎛️ Exemplo de formato de resposta técnica:
+**Problema identificado:** ...
+**Solução:** ...
+**Por que funciona:** ...
+**Dica Extra:** ...
       `
     },
     ...conversationHistory.slice(-6),
-    {
-      role: 'user',
-      content: message
-    }
+    { role: 'user', content: message }
   ];
 
   try {
+    console.log('Mensagens enviadas à OpenAI:', JSON.stringify(messages, null, 2));
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -64,18 +57,12 @@ Se o assunto for fora da música, diga: "Opa! 🎵 Só respondo dúvidas sobre p
     });
 
     const data = await response.json();
-
-    // LOGA o que veio da OpenAI
     console.log('Resposta da OpenAI:', JSON.stringify(data, null, 2));
 
-    if (!response.ok || !data.choices || !data.choices[0]?.message?.content) {
-      return res.status(500).json({
-        message: 'Erro na resposta da OpenAI 😵',
-        detalhes: data
-      });
+    const reply = data.choices?.[0]?.message?.content;
+    if (!reply) {
+      return res.status(500).json({ message: 'Sem resposta da OpenAI', detalhes: data });
     }
-
-    const reply = data.choices[0].message.content;
 
     return res.status(200).json({
       reply,
@@ -87,11 +74,8 @@ Se o assunto for fora da música, diga: "Opa! 🎵 Só respondo dúvidas sobre p
       success: true
     });
 
-  } catch (error) {
-    console.error('Erro ao chamar a OpenAI:', error);
-    return res.status(500).json({
-      message: 'Erro interno 😔',
-      error: error.message
-    });
+  } catch (err) {
+    console.error('Erro ao chamar OpenAI:', err);
+    return res.status(500).json({ message: 'Erro interno', error: err.message });
   }
 }
