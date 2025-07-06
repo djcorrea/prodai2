@@ -3,7 +3,12 @@ const input = document.getElementById('user-input');
 const sendBtn = document.getElementById('sendBtn');
 const typingIndicator = document.getElementById('typingIndicator');
 
-let conversationHistory = [];
+let conversationHistory = [
+  {
+    role: "system",
+    content: "Você é um mentor virtual especializado em produção musical, especialmente em funk, trap, phonk e estilos brasileiros. Responda com dicas práticas, técnicas, sugestões de plugins, estruturação musical, marketing e carreira musical. Seja direto, útil e sempre relacionado à produção musical."
+  }
+];
 
 function appendMessage(content, className) {
   const messageDiv = document.createElement('div');
@@ -39,11 +44,13 @@ async function sendMessage() {
   sendBtn.innerHTML = 'Enviando...';
   showTypingIndicator();
 
+  conversationHistory.push({ role: 'user', content: message });
+
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, conversationHistory })
+      body: JSON.stringify({ messages: conversationHistory })
     });
 
     const data = await res.json();
@@ -51,7 +58,7 @@ async function sendMessage() {
 
     if (data.reply) {
       appendMessage(`<strong>Assistente:</strong> ${data.reply}`, 'bot');
-      conversationHistory = data.conversationHistory || [];
+      conversationHistory.push({ role: 'assistant', content: data.reply });
     } else {
       appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia ou mal formatada.`, 'bot');
       console.error(data);
