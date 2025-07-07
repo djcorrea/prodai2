@@ -50,5 +50,6 @@ window.register = async function () {
 window.logout = async function () {
   await firebase.auth().signOut();
   localStorage.removeItem("user");
-  window.location.href = "login.html";
+  window.location.href = "/login.html";
 };
+
