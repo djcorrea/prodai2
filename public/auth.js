@@ -42,4 +42,9 @@ window.register = async function () {
     alert("Erro ao cadastrar: " + error.message);
   }
 };
+window.logout = async function () {
+  await firebase.auth().signOut();
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+};
 
