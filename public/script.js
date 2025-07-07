@@ -3,12 +3,7 @@ const input = document.getElementById('user-input');
 const sendBtn = document.getElementById('sendBtn');
 const typingIndicator = document.getElementById('typingIndicator');
 
-let conversationHistory = [
-  {
-    role: 'system',
-    content: 'Você é um assistente de produção musical brasileiro. Fale como um mentor que entende muito de funk, beat, mixagem, sintetizadores e carreira. Responda com técnica e clareza como se estivesse ensinando.'
-  }
-];
+let conversationHistory = [];
 
 function appendMessage(content, className) {
   const messageDiv = document.createElement('div');
@@ -50,7 +45,10 @@ async function sendMessage() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory })
+      body: JSON.stringify({
+        message,
+        conversationHistory
+      })
     });
 
     const data = await res.json();
@@ -61,6 +59,7 @@ async function sendMessage() {
       conversationHistory.push({ role: 'assistant', content: data.reply });
     } else {
       appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia.`, 'bot');
+      console.error('Resposta vazia ou mal formatada:', data);
     }
   } catch (err) {
     hideTypingIndicator();
