@@ -63,19 +63,15 @@ async function sendMessage() {
       })
     });
 
+    const rawText = await res.text();
+
     let data;
     try {
-      data = await res.json();
+      data = JSON.parse(rawText);
     } catch (e) {
-      const text = await res.text();
       hideTypingIndicator();
-      console.error("Resposta inválida do servidor:", text);
-      appendMessage(`<strong>Assistente:</strong> Erro inesperado do servidor.`, 'bot');
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
-        </svg>Enviar`;
+      console.error("Resposta inválida do servidor:", rawText);
+      appendMessage(`<strong>Assistente:</strong> Erro inesperado no servidor.`, 'bot');
       return;
     }
 
@@ -90,6 +86,7 @@ async function sendMessage() {
       appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia ou inesperada.`, 'bot');
       console.error('Erro na resposta:', data);
     }
+
   } catch (err) {
     hideTypingIndicator();
     appendMessage(`<strong>Assistente:</strong> Erro ao se conectar com o servidor.`, 'bot');
