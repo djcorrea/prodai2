@@ -1,13 +1,13 @@
 // auth.js
 
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY_AQUI", // 🔁 Substitua pela chave correta do Firebase
+  apiKey: "AIzaSyBKby0RdIOGorhrfBRMCWnL25peU3epGTw",
   authDomain: "prodai-58436.firebaseapp.com",
   projectId: "prodai-58436",
-  storageBucket: "prodai-58436.appspot.com", // ✅ corrigido
+  storageBucket: "prodai-58436.firebasestorage.app",
   messagingSenderId: "801631191322",
   appId: "1:801631191322:web:80e3d29cf7468331652ca3",
-  measurementId: "G-MBDDHYN6Z0"
+  measurementId: "G-MBDHDYN6Z0"
 };
 
 firebase.initializeApp(firebaseConfig);
