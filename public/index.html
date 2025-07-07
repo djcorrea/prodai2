@@ -6,7 +6,7 @@
   <title>Prod.AI - Mentor Virtual</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.3.1/firebase-auth-compat.js"></script>
@@ -14,13 +14,13 @@
 </head>
 <body>
   <div class="particles"></div>
-  
+
   <div class="container fade-in">
     <header class="header">
       <h1 class="logo">Prod.AI</h1>
       <p class="subtitle">Seu mentor virtual inteligente</p>
     </header>
-    
+
     <div class="chat-container">
       <div class="chatbox" id="chatbox">
         <div class="message bot">
@@ -38,7 +38,7 @@
         </div>
         <span class="typing-text">Assistente está digitando...</span>
       </div>
-      
+
       <div class="input-container">
         <input type="text" id="user-input" placeholder="Digite sua mensagem..." autocomplete="off" />
         <button onclick="sendMessage()" id="sendBtn">
@@ -50,30 +50,13 @@
         </button>
       </div>
     </div>
-    
+
     <footer class="footer">
       <p>Siga no Instagram: <a href="https://instagram.com/djcorreaoriginal" target="_blank">@djcorreaoriginal</a></p>
       <button onclick="logout()" style="margin-top: 20px;">Sair</button>
     </footer>
   </div>
-  
+
   <script src="script.js"></script>
-
-  <!-- Verificar se usuário está logado -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBKby0RdI0GohrfBMRcWnL25peU3epGTw",
-      authDomain: "prodai-58436.firebaseapp.com",
-      projectId: "prodai-58436",
-    };
-
-    firebase.initializeApp(firebaseConfig);
-
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (!user) {
-        window.location.href = "login.html";
-      }
-    });
-  </script>
 </body>
 </html>
