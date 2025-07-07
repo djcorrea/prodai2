@@ -10,13 +10,19 @@ const firebaseConfig = {
   measurementId: "G-MBDHDYN6Z0"
 };
 
+console.log("Inicializando Firebase...");
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+console.log("Firebase inicializado!");
 
 // 🔐 LOGIN
 window.login = async function () {
+  console.log("Botão de login clicado");
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
+
+  console.log("Tentando logar com:", email);
 
   try {
     const result = await auth.signInWithEmailAndPassword(email, password);
@@ -24,7 +30,8 @@ window.login = async function () {
     alert("Login realizado com sucesso!");
     console.log("Usuário autenticado:", result.user);
 
-    // Caminho correto (ajuste conforme sua estrutura)
+    // Verificando redirecionamento
+    console.log("Redirecionando para index.html...");
     window.location.href = "index.html";
   } catch (error) {
     console.error("Erro ao fazer login:", error.message);
@@ -34,8 +41,12 @@ window.login = async function () {
 
 // 👤 CADASTRO
 window.register = async function () {
+  console.log("Botão de cadastro clicado");
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
+
+  console.log("Tentando cadastrar com:", email);
 
   try {
     const result = await auth.createUserWithEmailAndPassword(email, password);
@@ -43,6 +54,7 @@ window.register = async function () {
     alert("Cadastro realizado com sucesso!");
     console.log("Usuário cadastrado:", result.user);
 
+    console.log("Redirecionando para index.html...");
     window.location.href = "index.html";
   } catch (error) {
     console.error("Erro ao cadastrar:", error.message);
@@ -52,7 +64,9 @@ window.register = async function () {
 
 // 🔓 LOGOUT
 window.logout = async function () {
+  console.log("Fazendo logout...");
   await auth.signOut();
   localStorage.removeItem("user");
+  console.log("Redirecionando para login.html...");
   window.location.href = "login.html";
 };
