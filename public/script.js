@@ -42,12 +42,24 @@ async function sendMessage() {
   showTypingIndicator();
 
   try {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      appendMessage(`<strong>Assistente:</strong> Você precisa estar logado para usar o chat.`, 'bot');
+      hideTypingIndicator();
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = 'Enviar';
+      return;
+    }
+
+    const idToken = await user.getIdToken();
+
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message,
-        conversationHistory
+        conversationHistory,
+        idToken
       })
     });
 
@@ -57,9 +69,11 @@ async function sendMessage() {
     if (data.reply) {
       appendMessage(`<strong>Assistente:</strong> ${data.reply}`, 'bot');
       conversationHistory.push({ role: 'assistant', content: data.reply });
+    } else if (data.error === 'Limite diário de mensagens atingido') {
+      appendMessage(`<strong>Assistente:</strong> Você atingiu o limite de 10 mensagens diárias da versão gratuita. <a href="https://seulink-do-stripe.com" target="_blank">Assine a versão Plus</a> para mensagens ilimitadas.`, 'bot');
     } else {
-      appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia.`, 'bot');
-      console.error('Resposta vazia ou mal formatada:', data);
+      appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia ou inesperada.`, 'bot');
+      console.error('Erro na resposta:', data);
     }
   } catch (err) {
     hideTypingIndicator();
