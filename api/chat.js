@@ -1,17 +1,69 @@
-export const config = {
-  runtime: "nodejs"
-};
-
 import fetch from 'node-fetch';
+import admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: "prodai-58436",
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+
+const db = getFirestore();
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { message, conversationHistory = [] } = req.body;
+  const { message, conversationHistory = [], idToken } = req.body;
+
+  if (!idToken) {
+    return res.status(401).json({ error: 'Usuário não autenticado' });
+  }
 
   try {
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const email = decoded.email;
+
+    const userRef = db.collection('usuarios').doc(uid);
+    const userDoc = await userRef.get();
+
+    const hoje = new Date().toISOString().split('T')[0];
+
+    if (!userDoc.exists) {
+      await userRef.set({
+        uid,
+        email,
+        plano: 'gratis',
+        mensagensHoje: 0,
+        ultimaData: hoje
+      });
+    }
+
+    const userData = (await userRef.get()).data();
+
+    // Resetar mensagens se mudou o dia
+    if (userData.ultimaData !== hoje) {
+      await userRef.update({
+        mensagensHoje: 0,
+        ultimaData: hoje
+      });
+      userData.mensagensHoje = 0;
+      userData.ultimaData = hoje;
+    }
+
+    // Bloqueio se plano gratuito
+    if (userData.plano === 'gratis' && userData.mensagensHoje >= 10) {
+      return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
+    }
+
+    // Consulta à API da OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -25,9 +77,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.
-
-[...mensagem completa como você já tem...]`
+            content: `Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.`
           },
           ...conversationHistory,
           { role: 'user', content: message }
@@ -39,20 +89,20 @@ export default async function handler(req, res) {
     const reply = data.choices?.[0]?.message?.content?.trim();
 
     if (!reply) {
-      return res.status(500).json({ error: 'Resposta da OpenAI vazia', data });
+      return res.status(500).json({ error: 'Resposta vazia da OpenAI', data });
     }
 
-    res.status(200).json({
-      reply,
-      conversationHistory: [
-        ...conversationHistory,
-        { role: 'user', content: message },
-        { role: 'assistant', content: reply }
-      ]
-    });
+    // Atualizar contador de mensagens se for plano grátis
+    if (userData.plano === 'gratis') {
+      await userRef.update({
+        mensagensHoje: admin.firestore.FieldValue.increment(1)
+      });
+    }
+
+    return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error('Erro na API do OpenAI:', error);
-    res.status(500).json({ error: 'Erro ao se comunicar com o OpenAI' });
+    console.error('[ERRO CHAT.JS]', error);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
   }
 }
