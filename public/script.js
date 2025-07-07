@@ -72,7 +72,9 @@ async function sendMessage() {
     } catch (e) {
       hideTypingIndicator();
       console.error("Resposta inválida do servidor:", rawText);
-      appendMessage(`<strong>Assistente:</strong> Erro inesperado no servidor.`, 'bot');
+      appendMessage(`<strong>Assistente:</strong> Ocorreu um erro no servidor. Tente novamente mais tarde.`, 'bot');
+console.error("Resposta inválida:", rawText);
+
       return;
     }
 
