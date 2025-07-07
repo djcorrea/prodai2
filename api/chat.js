@@ -6,7 +6,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: "prodai-58436",
+      projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
@@ -42,33 +42,26 @@ export default async function handler(req, res) {
         email,
         plano: 'gratis',
         mensagensHoje: 0,
-        ultimaData: hoje
+        ultimaData: hoje,
       });
     }
 
     const userData = (await userRef.get()).data();
 
-    // Resetar mensagens se mudou o dia
     if (userData.ultimaData !== hoje) {
-      await userRef.update({
-        mensagensHoje: 0,
-        ultimaData: hoje
-      });
+      await userRef.update({ mensagensHoje: 0, ultimaData: hoje });
       userData.mensagensHoje = 0;
-      userData.ultimaData = hoje;
     }
 
-    // Bloqueio se plano gratuito
     if (userData.plano === 'gratis' && userData.mensagensHoje >= 10) {
       return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
     }
 
-    // Consulta à API da OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
@@ -77,32 +70,33 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.`
+            content:
+              'Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.',
           },
           ...conversationHistory,
-          { role: 'user', content: message }
-        ]
-      })
+          { role: 'user', content: message },
+        ],
+      }),
     });
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content?.trim();
 
-    if (!reply) {
+    if (!data.choices || !data.choices[0]?.message?.content) {
       return res.status(500).json({ error: 'Resposta vazia da OpenAI', data });
     }
 
-    // Atualizar contador de mensagens se for plano grátis
+    const reply = data.choices[0].message.content.trim();
+
     if (userData.plano === 'gratis') {
       await userRef.update({
-        mensagensHoje: admin.firestore.FieldValue.increment(1)
+        mensagensHoje: admin.firestore.FieldValue.increment(1),
       });
     }
 
     return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error('[ERRO CHAT.JS]', error);
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('[ERRO NO /api/chat.js]', error);
+    return res.status(500).json({ error: 'Erro interno do servidor', detalhes: error.message });
   }
 }
