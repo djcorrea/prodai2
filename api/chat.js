@@ -6,7 +6,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: "prodai-58436", // <-- substituído o process.env que não existia
+      projectId: "prodai-58436",
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
@@ -79,10 +79,24 @@ export default async function handler(req, res) {
       }),
     });
 
-    const data = await response.json();
+    // Lê a resposta como texto para debugar caso não seja JSON válido
+    const text = await response.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      return res.status(500).json({
+        error: 'Erro ao interpretar resposta da OpenAI',
+        raw: text,
+      });
+    }
 
     if (!data.choices || !data.choices[0]?.message?.content) {
-      return res.status(500).json({ error: 'Resposta vazia da OpenAI', data });
+      return res.status(500).json({
+        error: 'Resposta vazia da OpenAI',
+        raw: data,
+      });
     }
 
     const reply = data.choices[0].message.content.trim();
