@@ -6,7 +6,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: "prodai-58436",
+      projectId: process.env.FIREBASE_PROJECT_ID || "prodai-58436",
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
@@ -57,43 +57,49 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
     }
 
+    // ✅ FILTRA mensagens malformadas
+    const mensagensFiltradas = conversationHistory.filter(
+      (msg) => msg && msg.role && msg.content
+    );
+
+    const body = {
+      model: 'gpt-3.5-turbo',
+      temperature: 0.7,
+      max_tokens: 1000,
+      messages: [
+        {
+          role: 'system',
+          content: 'Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.',
+        },
+        ...mensagensFiltradas,
+        { role: 'user', content: message },
+      ],
+    };
+
     const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        temperature: 0.7,
-        max_tokens: 1000,
-        messages: [
-          {
-            role: 'system',
-            content: 'Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.',
-          },
-          ...conversationHistory,
-          { role: 'user', content: message },
-        ],
-      }),
+      body: JSON.stringify(body),
     });
 
-    const text = await openaiRes.text();
+    const rawText = await openaiRes.text();
 
-    // tentar converter para JSON
     let data;
     try {
-      data = JSON.parse(text);
+      data = JSON.parse(rawText);
     } catch (err) {
       return res.status(500).json({
-        error: 'Resposta da OpenAI não é JSON válido.',
-        raw: text,
+        error: 'Resposta da OpenAI não é um JSON válido.',
+        raw: rawText,
       });
     }
 
     if (!data.choices || !data.choices[0]?.message?.content) {
       return res.status(500).json({
-        error: 'Resposta inválida ou vazia da OpenAI',
+        error: 'Resposta inválida ou vazia da OpenAI.',
         openai: data,
       });
     }
