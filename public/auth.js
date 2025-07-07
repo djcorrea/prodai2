@@ -2,13 +2,15 @@
 
 // 1. Configuração do Firebase (substitua pelos seus dados)
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_DOMINIO.firebaseapp.com",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_BUCKET.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyBKby0RdI0GohrfBMRcWnL25peU3epGTw",
+  authDomain: "prodai-58436.firebaseapp.com",
+  projectId: "prodai-58436",
+  storageBucket: "prodai-58436.appspot.com",
+  messagingSenderId: "801631191322",
+  appId: "1:801631191322:web:80e3d29cf7468331652ca3",
+  measurementId: "G-MBDDHYN6Z0"
 };
+
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
