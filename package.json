@@ -6,8 +6,7 @@
     "dev": "vercel dev"
   },
   "dependencies": {
-    "dotenv": "^17.0.1",
-    "node-fetch": "^2.6.7",
-    "firebase-admin": "^11.11.1"
+    "firebase-admin": "^12.0.0",
+    "node-fetch": "^3.3.2"
   }
 }
