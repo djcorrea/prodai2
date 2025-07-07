@@ -22,7 +22,8 @@ window.login = async function () {
     const result = await auth.signInWithEmailAndPassword(email, password);
     localStorage.setItem("user", JSON.stringify(result.user));
     console.log("Login realizado com sucesso");
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
+
   } catch (error) {
     console.error("Erro ao fazer login:", error.message);
     alert("Erro ao fazer login: " + error.message);
