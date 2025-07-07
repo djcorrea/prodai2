@@ -95,9 +95,13 @@ export default async function handler(req, res) {
 
     const rawText = await openaiRes.text();
 
-    if (!openaiRes.ok) {
-      return res.status(openaiRes.status).json({ error: 'Erro na API da OpenAI', detalhes: rawText });
-    }
+if (!openaiRes.ok) {
+  console.error('❌ Erro da OpenAI:', rawText);
+  return res.status(500).json({
+    error: 'Erro da API da OpenAI',
+    detalhes: rawText,
+  });
+}
 
     let data;
     try {
