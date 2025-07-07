@@ -13,43 +13,46 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// Login
+// 🔐 LOGIN
 window.login = async function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
 
   try {
     const result = await auth.signInWithEmailAndPassword(email, password);
     localStorage.setItem("user", JSON.stringify(result.user));
-    console.log("Login realizado com sucesso");
-    window.location.href = "/index.html";
+    alert("Login realizado com sucesso!");
+    console.log("Usuário autenticado:", result.user);
 
+    // Caminho correto (ajuste conforme sua estrutura)
+    window.location.href = "index.html";
   } catch (error) {
     console.error("Erro ao fazer login:", error.message);
     alert("Erro ao fazer login: " + error.message);
   }
 };
 
-// Cadastro
+// 👤 CADASTRO
 window.register = async function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
 
   try {
     const result = await auth.createUserWithEmailAndPassword(email, password);
     localStorage.setItem("user", JSON.stringify(result.user));
-    console.log("Usuário cadastrado com sucesso");
-    window.location.href = "/index.html";
+    alert("Cadastro realizado com sucesso!");
+    console.log("Usuário cadastrado:", result.user);
 
+    window.location.href = "index.html";
   } catch (error) {
     console.error("Erro ao cadastrar:", error.message);
     alert("Erro ao cadastrar: " + error.message);
   }
 };
 
+// 🔓 LOGOUT
 window.logout = async function () {
-  await firebase.auth().signOut();
+  await auth.signOut();
   localStorage.removeItem("user");
-  window.location.href = "/login.html";
+  window.location.href = "login.html";
 };
-
