@@ -39,7 +39,8 @@ window.register = async function () {
     const result = await auth.createUserWithEmailAndPassword(email, password);
     localStorage.setItem("user", JSON.stringify(result.user));
     console.log("Usuário cadastrado com sucesso");
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
+
   } catch (error) {
     console.error("Erro ao cadastrar:", error.message);
     alert("Erro ao cadastrar: " + error.message);
