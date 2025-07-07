@@ -2,13 +2,13 @@
 
 // 1. Configuração do Firebase (substitua pelos seus dados)
 const firebaseConfig = {
-  apiKey: "AIzaSyBKby0RdI0GohrfBMRcWnL25peU3epGTw",
+  apiKey: "AIzaSyBKby0RdIOGorhrfBRMCWnL25peU3epGTw",
   authDomain: "prodai-58436.firebaseapp.com",
   projectId: "prodai-58436",
-  storageBucket: "prodai-58436.appspot.com",
+  storageBucket: "prodai-58436.firebasestorage.app",
   messagingSenderId: "801631191322",
   appId: "1:801631191322:web:80e3d29cf7468331652ca3",
-  measurementId: "G-MBDDHYN6Z0"
+  measurementId: "G-MBDHDYN6Z0"
 };
 
 
