@@ -57,7 +57,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,8 +70,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content:
-              'Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.',
+            content: 'Você é o Prod.AI 🎵 - um mentor especialista em produção musical brasileira, focado principalmente em FUNK, mas dominando todos os estilos musicais.',
           },
           ...conversationHistory,
           { role: 'user', content: message },
@@ -79,23 +78,23 @@ export default async function handler(req, res) {
       }),
     });
 
-    // Lê a resposta como texto para debugar caso não seja JSON válido
-    const text = await response.text();
+    const text = await openaiRes.text();
 
+    // tentar converter para JSON
     let data;
     try {
       data = JSON.parse(text);
-    } catch (e) {
+    } catch (err) {
       return res.status(500).json({
-        error: 'Erro ao interpretar resposta da OpenAI',
+        error: 'Resposta da OpenAI não é JSON válido.',
         raw: text,
       });
     }
 
     if (!data.choices || !data.choices[0]?.message?.content) {
       return res.status(500).json({
-        error: 'Resposta vazia da OpenAI',
-        raw: data,
+        error: 'Resposta inválida ou vazia da OpenAI',
+        openai: data,
       });
     }
 
@@ -111,6 +110,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[ERRO NO /api/chat.js]', error);
-    return res.status(500).json({ error: 'Erro interno do servidor', detalhes: error.message });
+    return res.status(500).json({
+      error: 'Erro interno do servidor',
+      detalhes: error.message,
+    });
   }
 }
