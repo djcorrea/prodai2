@@ -1,3 +1,7 @@
+console.log("✅ Chave API:", process.env.OPENAI_API_KEY ? 'OK' : 'Faltando');
+console.log("✅ Firebase Key:", process.env.FIREBASE_PRIVATE_KEY ? 'OK' : 'Faltando');
+console.log("✅ Client Email:", process.env.FIREBASE_CLIENT_EMAIL);
+
 import fetch from 'node-fetch';
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
