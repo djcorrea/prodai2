@@ -5,6 +5,7 @@ const typingIndicator = document.getElementById('typingIndicator');
 
 let conversationHistory = [];
 
+// Exibe mensagens no chat
 function appendMessage(content, className) {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${className}`;
@@ -18,16 +19,18 @@ function appendMessage(content, className) {
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
+// Exibe o indicador de digitação
 function showTypingIndicator() {
   typingIndicator.style.display = 'flex';
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
+// Esconde o indicador de digitação
 function hideTypingIndicator() {
   typingIndicator.style.display = 'none';
 }
 
-// 👇 Função global para funcionar no botão HTML
+// Torna a função global para ser usada com onclick="sendMessage()"
 window.sendMessage = async function () {
   const message = input.value.trim();
   if (!message || sendBtn.disabled) return;
@@ -71,9 +74,9 @@ window.sendMessage = async function () {
     try {
       data = JSON.parse(rawText);
     } catch (e) {
-      hideTypingIndicator();
       console.error("❌ Erro ao converter JSON:", rawText);
       appendMessage(`<strong>Assistente:</strong> Erro inesperado no servidor.`, 'bot');
+      hideTypingIndicator();
       return;
     }
 
@@ -85,14 +88,14 @@ window.sendMessage = async function () {
     } else if (data.error === 'Limite diário de mensagens atingido') {
       appendMessage(`<strong>Assistente:</strong> Você atingiu o limite de 10 mensagens diárias da versão gratuita. <a href="https://seulink-do-stripe.com" target="_blank">Assine a versão Plus</a> para mensagens ilimitadas.`, 'bot');
     } else {
+      console.error('❌ Resposta inesperada:', data);
       appendMessage(`<strong>Assistente:</strong> Erro: resposta vazia ou inesperada.`, 'bot');
-      console.error('❌ Resposta inválida:', data);
     }
 
   } catch (err) {
-    hideTypingIndicator();
+    console.error("❌ Erro ao conectar com a API:", err);
     appendMessage(`<strong>Assistente:</strong> Erro ao se conectar com o servidor.`, 'bot');
-    console.error("❌ Erro de conexão:", err);
+    hideTypingIndicator();
   } finally {
     sendBtn.disabled = false;
     sendBtn.innerHTML = `
@@ -102,6 +105,7 @@ window.sendMessage = async function () {
   }
 };
 
+// Enter = enviar mensagem
 input.addEventListener('keydown', function (e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -109,6 +113,7 @@ input.addEventListener('keydown', function (e) {
   }
 });
 
+// Mensagem inicial automática
 window.addEventListener('load', () => {
   input.focus();
   setTimeout(() => {
