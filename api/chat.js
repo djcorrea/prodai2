@@ -1,26 +1,35 @@
-console.log("✅ Chave API:", process.env.OPENAI_API_KEY ? 'OK' : 'Faltando');
-console.log("✅ Firebase Key:", process.env.FIREBASE_PRIVATE_KEY ? 'OK' : 'Faltando');
-console.log("✅ Client Email:", process.env.FIREBASE_CLIENT_EMAIL);
-
-import fetch from 'node-fetch';
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// Inicialização do Firebase
+// Inicialização do Firebase com melhor tratamento de erros
 if (!admin.apps.length) {
   try {
     console.log('🔄 Inicializando Firebase...');
+    
+    // Verificar se todas as variáveis estão definidas
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+      throw new Error('Variáveis do Firebase não configuradas');
+    }
+
+    // Melhor tratamento da chave privada
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = privateKey.slice(1, -1);
+    }
+    privateKey = privateKey.replace(/\\n/g, '\n');
+
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID || "prodai-58436",
+        projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\\\n/g, '\n'),
+        privateKey: privateKey,
       }),
     });
     console.log('✅ Firebase inicializado com sucesso');
   } catch (error) {
-    console.error('❌ Erro ao inicializar Firebase:', error);
+    console.error('❌ Erro ao inicializar Firebase:', error.message);
+    // Não lançar erro aqui, deixar para o handler lidar
   }
 }
 
@@ -29,6 +38,7 @@ const db = getFirestore();
 export default async function handler(req, res) {
   console.log('🚀 Requisição recebida em /api/chat');
 
+  // Headers CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -37,6 +47,12 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
   try {
+    // Verificar se o Firebase foi inicializado corretamente
+    if (!admin.apps.length) {
+      console.error('❌ Firebase não inicializado');
+      return res.status(500).json({ error: 'Erro na configuração do servidor' });
+    }
+
     const { message, conversationHistory = [], idToken } = req.body;
 
     // Validações básicas
@@ -50,6 +66,7 @@ export default async function handler(req, res) {
     }
 
     if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ API Key da OpenAI não configurada');
       return res.status(500).json({ error: 'API Key da OpenAI não configurada' });
     }
 
@@ -66,27 +83,31 @@ export default async function handler(req, res) {
     const email = decoded.email;
     console.log(`✅ Usuário autenticado: ${email} (${uid})`);
 
-    // Verificação do usuário no Firebase
-    const userRef = db.collection('usuarios').doc(uid);
-    const hoje = new Date().toISOString().split('T')[0];
+    // Verificação do usuário no Firebase com tratamento de erro
+    let userRef, userDoc, userData;
+    try {
+      userRef = db.collection('usuarios').doc(uid);
+      const hoje = new Date().toISOString().split('T')[0];
+      userDoc = await userRef.get();
 
-    let userDoc = await userRef.get();
-    let userData;
+      if (!userDoc.exists) {
+        await userRef.set({ uid, email, plano: 'gratis', mensagensHoje: 0, ultimaData: hoje });
+        userData = { plano: 'gratis', mensagensHoje: 0, ultimaData: hoje };
+      } else {
+        userData = userDoc.data();
+      }
 
-    if (!userDoc.exists) {
-      await userRef.set({ uid, email, plano: 'gratis', mensagensHoje: 0, ultimaData: hoje });
-      userData = { plano: 'gratis', mensagensHoje: 0, ultimaData: hoje };
-    } else {
-      userData = userDoc.data();
-    }
+      if (userData.ultimaData !== hoje) {
+        await userRef.update({ mensagensHoje: 0, ultimaData: hoje });
+        userData.mensagensHoje = 0;
+      }
 
-    if (userData.ultimaData !== hoje) {
-      await userRef.update({ mensagensHoje: 0, ultimaData: hoje });
-      userData.mensagensHoje = 0;
-    }
-
-    if (userData.plano === 'gratis' && userData.mensagensHoje >= 10) {
-      return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
+      if (userData.plano === 'gratis' && userData.mensagensHoje >= 10) {
+        return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
+      }
+    } catch (firebaseError) {
+      console.error('❌ Erro no Firebase:', firebaseError.message);
+      return res.status(500).json({ error: 'Erro na verificação do usuário', detalhes: firebaseError.message });
     }
 
     // Filtrar e validar histórico de conversas
@@ -122,11 +143,11 @@ export default async function handler(req, res) {
       ],
     };
 
-    console.log("📤 Enviando para OpenAI:", JSON.stringify(requestBody, null, 2));
+    console.log("📤 Enviando para OpenAI...");
 
-    // Timeout para requisições
+    // Usar fetch nativo (disponível em Node.js 18+)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 segundos
 
     let openaiRes;
     try {
@@ -141,11 +162,16 @@ export default async function handler(req, res) {
       });
     } catch (fetchError) {
       clearTimeout(timeoutId);
+      console.error('❌ Erro na requisição para OpenAI:', fetchError.message);
+      
       if (fetchError.name === 'AbortError') {
-        console.error('❌ Timeout na requisição para OpenAI');
         return res.status(504).json({ error: 'Timeout na requisição para OpenAI' });
       }
-      throw fetchError;
+      
+      return res.status(500).json({ 
+        error: 'Erro na conexão com OpenAI', 
+        detalhes: fetchError.message 
+      });
     }
 
     clearTimeout(timeoutId);
@@ -177,7 +203,7 @@ export default async function handler(req, res) {
 
     // Processar resposta
     const rawText = await openaiRes.text();
-    console.log("📥 Resposta raw da OpenAI:", rawText.substring(0, 200) + "...");
+    console.log("📥 Resposta recebida da OpenAI");
 
     if (!rawText || rawText.trim() === '') {
       console.error('❌ Resposta vazia da OpenAI');
