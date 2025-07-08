@@ -39,13 +39,14 @@ export default async function handler(req, res) {
   try {
     const { message, conversationHistory = [], idToken } = req.body;
 
+    // Validações básicas
     if (!idToken) {
       console.warn('⚠️ idToken ausente na requisição');
       return res.status(401).json({ error: 'Usuário não autenticado' });
     }
 
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: 'Mensagem inválida' });
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Mensagem inválida ou vazia' });
     }
 
     if (!process.env.OPENAI_API_KEY) {
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
     const email = decoded.email;
     console.log(`✅ Usuário autenticado: ${email} (${uid})`);
 
+    // Verificação do usuário no Firebase
     const userRef = db.collection('usuarios').doc(uid);
     const hoje = new Date().toISOString().split('T')[0];
 
@@ -87,9 +89,21 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Limite diário de mensagens atingido' });
     }
 
+    // Filtrar e validar histórico de conversas
     const mensagensFiltradas = conversationHistory
-      .filter(msg => msg && msg.role && msg.content && typeof msg.content === 'string')
-      .slice(-10);
+      .filter(msg => {
+        return msg && 
+               msg.role && 
+               typeof msg.role === 'string' && 
+               ['user', 'assistant', 'system'].includes(msg.role) &&
+               msg.content && 
+               typeof msg.content === 'string' &&
+               msg.content.trim().length > 0;
+      })
+      .slice(-10); // Limitar histórico
+
+    // Limitar tamanho da mensagem
+    const messageContent = message.trim().substring(0, 2000);
 
     const requestBody = {
       model: 'gpt-3.5-turbo',
@@ -103,57 +117,132 @@ export default async function handler(req, res) {
         ...mensagensFiltradas,
         {
           role: 'user',
-          content: message.trim(),
+          content: messageContent,
         },
       ],
     };
 
     console.log("📤 Enviando para OpenAI:", JSON.stringify(requestBody, null, 2));
 
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
+    // Timeout para requisições
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos
 
-    const rawText = await openaiRes.text();
+    let openaiRes;
+    try {
+      openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error('❌ Timeout na requisição para OpenAI');
+        return res.status(504).json({ error: 'Timeout na requisição para OpenAI' });
+      }
+      throw fetchError;
+    }
 
+    clearTimeout(timeoutId);
+
+    // Verificar status da resposta
     if (!openaiRes.ok) {
-      console.error('❌ Erro da OpenAI:', rawText);
+      const errorText = await openaiRes.text();
+      console.error('❌ Erro da OpenAI:', {
+        status: openaiRes.status,
+        statusText: openaiRes.statusText,
+        body: errorText
+      });
+      
+      // Tratar diferentes tipos de erro da OpenAI
+      if (openaiRes.status === 429) {
+        return res.status(429).json({ error: 'Rate limit atingido. Tente novamente em alguns minutos.' });
+      } else if (openaiRes.status === 401) {
+        return res.status(500).json({ error: 'Erro de autenticação com a OpenAI' });
+      } else if (openaiRes.status === 400) {
+        return res.status(400).json({ error: 'Requisição inválida para OpenAI' });
+      }
+      
       return res.status(500).json({
         error: 'Erro da API da OpenAI',
-        detalhes: rawText,
+        status: openaiRes.status,
+        detalhes: errorText,
       });
+    }
+
+    // Processar resposta
+    const rawText = await openaiRes.text();
+    console.log("📥 Resposta raw da OpenAI:", rawText.substring(0, 200) + "...");
+
+    if (!rawText || rawText.trim() === '') {
+      console.error('❌ Resposta vazia da OpenAI');
+      return res.status(500).json({ error: 'Resposta vazia da OpenAI' });
     }
 
     let data;
     try {
       data = JSON.parse(rawText);
-    } catch (err) {
-      console.error('❌ Erro ao fazer parse da resposta da OpenAI:', rawText);
-      return res.status(500).json({ error: 'Resposta inválida da OpenAI', raw: rawText });
+    } catch (parseError) {
+      console.error('❌ Erro ao fazer parse da resposta da OpenAI:', {
+        error: parseError.message,
+        raw: rawText.substring(0, 500)
+      });
+      return res.status(500).json({ 
+        error: 'Resposta inválida da OpenAI (não é JSON válido)', 
+        parseError: parseError.message 
+      });
     }
 
-    if (!data.choices || !data.choices[0]?.message?.content) {
-      console.warn('⚠️ Resposta da OpenAI sem conteúdo');
-      return res.status(500).json({ error: 'Resposta da OpenAI vazia ou inválida', data });
+    // Validar estrutura da resposta
+    if (!data) {
+      return res.status(500).json({ error: 'Dados da OpenAI são nulos' });
+    }
+
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      console.warn('⚠️ Resposta da OpenAI sem choices válidos:', data);
+      return res.status(500).json({ error: 'Resposta da OpenAI sem opções válidas', data });
+    }
+
+    if (!data.choices[0]?.message?.content) {
+      console.warn('⚠️ Resposta da OpenAI sem conteúdo de mensagem:', data.choices[0]);
+      return res.status(500).json({ error: 'Resposta da OpenAI sem conteúdo de mensagem', data });
     }
 
     const reply = data.choices[0].message.content.trim();
 
-    if (userData.plano === 'gratis') {
-      await userRef.update({
-        mensagensHoje: admin.firestore.FieldValue.increment(1),
-      });
+    if (!reply || reply.length === 0) {
+      return res.status(500).json({ error: 'Resposta da OpenAI está vazia após trim' });
     }
 
+    // Atualizar contador de mensagens
+    if (userData.plano === 'gratis') {
+      try {
+        await userRef.update({
+          mensagensHoje: admin.firestore.FieldValue.increment(1),
+        });
+      } catch (updateError) {
+        console.warn('⚠️ Erro ao atualizar contador de mensagens:', updateError);
+        // Não retornar erro aqui, pois a resposta já foi gerada
+      }
+    }
+
+    console.log('✅ Resposta enviada com sucesso');
     return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error('💥 ERRO NO SERVIDOR:', error);
-    return res.status(500).json({ error: 'Erro interno do servidor', detalhes: error.message });
+    console.error('💥 ERRO NO SERVIDOR:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return res.status(500).json({ 
+      error: 'Erro interno do servidor', 
+      detalhes: error.message 
+    });
   }
 }
